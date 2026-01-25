@@ -24,6 +24,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         int y = birdY;
         int width = birdWidth;
         int height = birdHeight;
+        double rotation = 0;
         Image img;
 
         Bird(Image img) {
@@ -121,7 +122,14 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         g.drawImage(backgroundImage, 0, 0, boardWidth, boardHeight, null);
 
         // bird
-        g.drawImage(birdImage, bird.x, bird.y, birdWidth, birdHeight, null);
+        Graphics2D g2d = (Graphics2D) g;
+
+        int centerX = bird.x + bird.width / 2;
+        int centerY = bird.y + bird.height / 2;
+
+        g2d.rotate(bird.rotation, centerX, centerY);
+        g2d.drawImage(bird.img, bird.x, bird.y, bird.width, bird.height, null);
+        g2d.rotate(-bird.rotation, centerX, centerY);
 
         // pipes
         for(int i = 0; i < pipes.size(); i++) {
@@ -144,6 +152,10 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
 
     public void move() {
         velocityY += gravity;
+
+        // tilt bird based on vertical speed
+        bird.rotation = Math.toRadians(Math.min(45, Math.max(-25, velocityY * 4)));
+
         bird.y += velocityY;
         bird.y = Math.max(bird.y, 0);
 
@@ -203,6 +215,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
                 gameOver = false;
                 gameLoop.start();
                 placePipesTimer.start();
+                bird.rotation = 0;
             }
         }
     }

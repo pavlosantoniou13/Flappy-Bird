@@ -1,3 +1,4 @@
+import core.GamePanel;
 import javax.swing.*;
 
 public class App {
@@ -11,10 +12,10 @@ public class App {
         frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        FlappyBird flappyBird = new FlappyBird();
-        frame.add(flappyBird);
+        GamePanel gamePanel = new GamePanel();
+        frame.add(gamePanel);
         frame.pack();
-        flappyBird.requestFocus();
+        gamePanel.requestFocus();
         frame.setVisible(true);
 
     }

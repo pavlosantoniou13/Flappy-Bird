@@ -9,6 +9,12 @@ import java.util.ArrayList;
 import java.util.Random;
 
 public class GamePanel extends JPanel implements ActionListener, KeyListener {
+
+    // New state constants
+    private static final int MENU = 0;
+    private static final int PLAYING = 1;
+    private int gameState = MENU; // Start at the menu
+
     // Board dimensions from your original App.java
     int boardWidth = 360;
     int boardHeight = 640;
@@ -67,7 +73,6 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
                 placePipes();
             }
         });
-        placePipesTimer.start();
 
         // Game loop timer
         gameLoop = new Timer(1000/60, this);
@@ -95,22 +100,37 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
         // Background
         g.drawImage(backgroundImage, 0, 0, boardWidth, boardHeight, null);
 
+        if (gameState == MENU) {
+            g.setColor(Color.white);
+            g.setFont(new Font("Arial", Font.BOLD, 40));
+            g.drawString("FLAPPY BIRD", 50, 200);
+            
+            g.setFont(new Font("Arial", Font.PLAIN, 20));
+            g.drawString("Press SPACE to Start", 80, 300);
+            
+            // Draw the bird just sitting there for the arcade look
+            bird.draw(g);
+        } 
+        else {
+
+
         // Bird drawing with rotation
-        bird.draw(g); 
+            bird.draw(g); 
 
-        // Pipes drawing
-        for(int i = 0; i < pipes.size(); i++) {
-            Pipe pipe = pipes.get(i);
-            pipe.draw(g);
-        }
+            // Pipes drawing
+            for(int i = 0; i < pipes.size(); i++) {
+                Pipe pipe = pipes.get(i);
+                pipe.draw(g);
+            }
 
-        // Score display
-        g.setColor(Color.black);
-        g.setFont(new Font("Arial", Font.PLAIN, 32));
-        if (gameOver) {
-            g.drawString("Game Over: " + String.valueOf((int) score), 10, 35);
-        } else {
-            g.drawString(String.valueOf((int) score), 10, 35);
+            // Score display
+            g.setColor(Color.black);
+            g.setFont(new Font("Arial", Font.PLAIN, 32));
+            if (gameOver) {
+                g.drawString("Game Over: " + String.valueOf((int) score), 10, 35);
+            } else {
+                g.drawString(String.valueOf((int) score), 10, 35);
+            }
         }
     }
 
@@ -149,35 +169,47 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
                 a.y + a.height > b.y;
     }
 
-    @Override
+    public void restartGame() {
+        bird.y = birdY;               // Reset bird position
+        bird.velocityY = 0;          // Stop any downward momentum
+        bird.rotation = 0;           // Level the bird out
+        pipes.clear();               // Remove all old pipes
+        score = 0;                   // Reset the score
+        gameOver = false;            // Flip the flag
+        
+        // Restart the timers
+        gameLoop.start();
+        placePipesTimer.start();
+    }
+
+   @Override
     public void actionPerformed(ActionEvent e) {
-        move();
-        repaint();
-        if (gameOver) {
-            placePipesTimer.stop();
-            gameLoop.stop();
+        if (gameState == PLAYING && !gameOver) {
+            move();
         }
+        repaint();
     }
 
     @Override public void keyTyped(KeyEvent e) {}
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if(e.getKeyCode() == KeyEvent.VK_SPACE) {
-            bird.velocityY = -9; // Original flap strength
-            if (gameOver) {
-                // Restart logic
-                bird.y = birdY;
-                bird.velocityY = 0;
-                pipes.clear();
-                score = 0;
-                gameOver = false;
-                gameLoop.start();
+        if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+            if (gameState == MENU) {
+                gameState = PLAYING;
                 placePipesTimer.start();
-                bird.rotation = 0;
+                bird.velocityY = -9;
+            } 
+            else if (gameState == PLAYING) {
+                // Check if we are restarting or flapping
+                if (gameOver) {
+                    restartGame(); // Just reset everything and wait for the NEXT press to flap
+                } else {
+                    bird.velocityY = -9; // Only flap if the bird is actually alive
+                }
             }
         }
     }
-
+    
     @Override public void keyReleased(KeyEvent e) {}
 }
